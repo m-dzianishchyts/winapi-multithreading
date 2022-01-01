@@ -4,14 +4,21 @@
 #include <cassert>
 #include <filesystem>
 #include <fstream>
-#include <iostream>
 
 #include "Range.h"
+
+#ifdef _DEBUG
+#include <iostream>
+#define Debug(info) std::cout << info
+#else
+#define Debug(x)
+#endif
 
 std::vector<std::string> ReadAllLines(const std::string &filePath);
 std::vector<long long> DistributeLoadBetweenThreads(long long totalLoad, unsigned int concurrency);
 std::vector<Range<std::string>> PrepareSortRanges(std::vector<std::string> &lines,
                                                   const std::vector<long long> &threadLoads);
+void ThreadProc(void* parameter);
 void WriteAllLines(const std::string &filePath, const std::vector<std::string> &lines);
 
 void Util::FileUtils::Sort(const std::string &inputPath, const std::string &outputPath)
@@ -51,7 +58,7 @@ void Util::FileUtils::Sort(const std::string &inputPath, const std::string *outp
                            std::vector<std::string> *outputSortedLines)
 {
 	std::vector<std::string> lines = ReadAllLines(inputPath);
-	std::cout << "Lines in file \"" << inputPath << "\": " << lines.size() << std::endl;
+	Debug("Lines in file \"" << inputPath << "\": " << lines.size() << std::endl);
 
 	if (threadPool)
 	{
@@ -60,16 +67,13 @@ void Util::FileUtils::Sort(const std::string &inputPath, const std::string *outp
 		std::vector<long long> threadLoads = DistributeLoadBetweenThreads(static_cast<long long>(lines.size()),
 		                                                                  concurrency);
 		std::vector<Range<std::string>> sortRanges = PrepareSortRanges(lines, threadLoads);
-		for (const Range<std::string> &sortRange : sortRanges)
+		for (Range<std::string> &sortRange : sortRanges)
 		{
-			std::function sortFunction = [sortRange]() mutable
-			{
-				std::sort(sortRange.GetBegin(), sortRange.GetEnd());
-			};
-			Task sortTask(sortFunction);
+			Task sortTask(ThreadProc, &sortRange);
 			sortTasks.push_back(sortTask);
 		}
 
+		auto beforeSubmission = std::chrono::steady_clock::now();
 		for (const Task &sortTask : sortTasks)
 		{
 			threadPool->Submit(sortTask);
@@ -79,11 +83,16 @@ void Util::FileUtils::Sort(const std::string &inputPath, const std::string *outp
 		{
 			sortTask.WaitForCompletion();
 		}
+		auto afterCompletion = std::chrono::steady_clock::now();
 
 		for (const Range<std::string> &sortRange : sortRanges)
 		{
-			std::inplace_merge(lines.begin(), sortRange.GetBegin(), sortRange.GetEnd());
+			std::merge(lines.begin(), sortRange.GetBegin(), sortRange.GetBegin(), sortRange.GetEnd(), lines.begin());
 		}
+		auto afterMerge = std::chrono::steady_clock::now();
+
+		Debug("Time for parallel sorting: " << (afterCompletion - beforeSubmission).count() << std::endl);
+		Debug("Time for merging: " << (afterMerge - afterCompletion).count() << std::endl);
 	} else
 	{
 		std::sort(lines.begin(), lines.end());
@@ -146,6 +155,12 @@ std::vector<Range<std::string>> PrepareSortRanges(std::vector<std::string> &line
 		sortRanges.push_back(sortRange);
 	}
 	return sortRanges;
+}
+
+void ThreadProc(void *parameter)
+{
+	auto sortRange = static_cast<Range<std::string>*>(parameter);
+	std::sort(sortRange->GetBegin(), sortRange->GetEnd());
 }
 
 void WriteAllLines(const std::string &filePath, const std::vector<std::string> &lines)

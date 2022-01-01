@@ -5,6 +5,20 @@
 
 #include "synchapi.h"
 
+#ifdef _DEBUG
+#define DebugThreadCreation(x) LogThreadCreation(x)
+#else
+#define DebugThreadCreation(x)
+#endif
+
+#if defined(_DEBUG) && defined(DEBUG_SYNCHRONIZATION)
+#define DebugCriticalSectionEntering(x) LogCriticalSectionEntering(x)
+#define DebugCriticalSectionLeaving(x) LogCriticalSectionLeaving(x)
+#else
+#define DebugCriticalSectionEntering(x)
+#define DebugCriticalSectionLeaving(x)
+#endif
+
 static CRITICAL_SECTION logCriticalSection;
 
 ThreadPool::ThreadPool(unsigned short concurrency) : _threadConditionLock(), _criticalSection()
@@ -20,20 +34,20 @@ ThreadPool::ThreadPool(unsigned short concurrency) : _threadConditionLock(), _cr
 		Thread thread(StaticThreadStart, this);
 		_threads.emplace_back(thread);
 		thread.Start();
-		// LogThreadCreation(thread);
+		DebugThreadCreation(thread);
 	}
 }
 
 void ThreadPool::Submit(const Task &task)
 {
 	EnterCriticalSection(&_criticalSection);
-	// LogCriticalSectionEntering(__LINE__);
+	DebugCriticalSectionEntering(__LINE__);
 
 	_taskQueue.push(task);
 	WakeConditionVariable(&_threadConditionLock);
 
 	LeaveCriticalSection(&_criticalSection);
-	// LogCriticalSectionLeaving(__LINE__);
+	DebugCriticalSectionLeaving(__LINE__);
 }
 
 unsigned short ThreadPool::GetConcurrency() const
@@ -52,51 +66,40 @@ void ThreadPool::ThreadStart()
 	while (true)
 	{
 		EnterCriticalSection(&_criticalSection);
-		// LogCriticalSectionEntering(__LINE__);
+		DebugCriticalSectionEntering(__LINE__);
 
 		while (_taskQueue.empty())
 		{
-			// LogCriticalSectionLeaving(__LINE__);
+			DebugCriticalSectionLeaving(__LINE__);
 			SleepConditionVariableCS(&_threadConditionLock, &_criticalSection, INFINITE);
-			// LogCriticalSectionEntering(__LINE__);
+			DebugCriticalSectionEntering(__LINE__);
 		}
 
 		Task taskToPerform = _taskQueue.front();
 		_taskQueue.pop();
 
-		taskToPerform.Perform();
-
-		// LogCriticalSectionLeaving(__LINE__);
+		DebugCriticalSectionLeaving(__LINE__);
 		LeaveCriticalSection(&_criticalSection);
+
+		taskToPerform.Perform();
 	}
 }
 
 void ThreadPool::LogCriticalSectionEntering(unsigned int line) const
 {
-	EnterCriticalSection(&logCriticalSection);
-	// stringStream << "Thread #" << GetCurrentThreadId() << " entered critical section "
-	// 	<< _criticalSection.DebugInfo << " (lock count: " << _criticalSection.LockCount << ")" << std::endl;
 	std::cout << "Thread #" << GetCurrentThreadId() << " entered critical section "
 		<< &_criticalSection << " at line " << line
 		<< " (lock count: " << ((-1 - _criticalSection.LockCount) >> 2) << ")" << std::endl;
-	LeaveCriticalSection(&logCriticalSection);
 }
 
 void ThreadPool::LogCriticalSectionLeaving(unsigned int line) const
 {
-	EnterCriticalSection(&logCriticalSection);
-	// stringStream << "Thread #" << GetCurrentThreadId() << " left critical section "
-	// 	<< _criticalSection.DebugInfo << " (lock count: " << _criticalSection.LockCount << ")" << std::endl;
 	std::cout << "Thread #" << GetCurrentThreadId() << " left critical section "
 		<< &_criticalSection << " at line " << line
 		<< " (lock count: " << ((-1 - _criticalSection.LockCount) >> 2) << ")" << std::endl;
-	LeaveCriticalSection(&logCriticalSection);
 }
 
 void ThreadPool::LogThreadCreation(const Thread &thread)
 {
-	EnterCriticalSection(&logCriticalSection);
-	// stringStream << "Thread #" << thread.GetThreadId() << " created." << std::endl;
 	std::cout << "Thread #" << thread.GetThreadId() << " created." << std::endl;
-	LeaveCriticalSection(&logCriticalSection);
 }

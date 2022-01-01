@@ -1,7 +1,5 @@
 ﻿#pragma once
 
-#include <functional>
-#include <future>
 #include <queue>
 #include <sstream>
 #include <vector>

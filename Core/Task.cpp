@@ -2,16 +2,16 @@
 
 #include <iostream>
 
-Task::Task(std::function<void()> function)
-	: _function(std::move(function)),
+Task::Task(void (*function)(void *), void *parameter)
+	: _function(function),
+	  _parameter(parameter),
 	  _completionEvent(CreateEventW(nullptr, TRUE, FALSE, nullptr))
 {
 }
 
 void Task::Perform() const
 {
-	_function();
-	// std::cout << "Thread #" << GetCurrentThreadId() << " has completed task." << std::endl;
+	_function(_parameter);
 	SetEvent(_completionEvent);
 }
 
