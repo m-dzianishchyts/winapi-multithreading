@@ -19,8 +19,8 @@ namespace Test
 
 	protected:
 		inline static std::map<std::string, unsigned short> _fileCountMap = {
-			{FILE_1_KB, 1000},
-			{FILE_10_KB, 100},
+			{FILE_1_KB, 50},
+			{FILE_10_KB, 25},
 			{FILE_1_MB, 10},
 			{FILE_10_MB, 5},
 		};
