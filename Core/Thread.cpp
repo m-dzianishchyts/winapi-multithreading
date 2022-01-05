@@ -8,6 +8,11 @@ Thread::Thread(void (*startRoutine)(void*), void* parameter) : _threadId(-1)
 	                             CREATE_SUSPENDED, &_threadId);
 }
 
+Thread::~Thread()
+{
+	CloseHandle(_threadHandle);
+}
+
 void Thread::Start() const
 {
 	ResumeThread(_threadHandle);
