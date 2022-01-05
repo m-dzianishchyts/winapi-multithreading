@@ -26,6 +26,8 @@ private:
 	void ThreadStart();
 	static void StaticThreadStart(void *parameter);
 
+	Task TryTakeTask();
+
 	void LogCriticalSectionEntering(unsigned int line) const;
 	void LogCriticalSectionLeaving(unsigned int line) const;
 	static void LogThreadCreation(const Thread &thread);

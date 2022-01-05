@@ -57,35 +57,41 @@ void ThreadPool::StaticThreadStart(void *parameter)
 	threadPool->ThreadStart();
 }
 
-void ThreadPool::ThreadStart()
+Task ThreadPool::TryTakeTask()
 {
-	while (true)
-	{
-		EnterCriticalSection(&_criticalSection);
+	EnterCriticalSection(&_criticalSection);
 #if defined(_DEBUG) && defined(DEBUG_SYNCHRONIZATION)
 		LogCriticalSectionEntering(__LINE__);
 #endif
 
-		while (_taskQueue.empty())
-		{
+	while (_taskQueue.empty())
+	{
 #if defined(_DEBUG) && defined(DEBUG_SYNCHRONIZATION)
 			LogCriticalSectionLeaving(__LINE__);
 #endif
-			SleepConditionVariableCS(&_threadConditionLock, &_criticalSection, INFINITE);
+		SleepConditionVariableCS(&_threadConditionLock, &_criticalSection, INFINITE);
 #if defined(_DEBUG) && defined(DEBUG_SYNCHRONIZATION)
 			LogCriticalSectionEntering(__LINE__);
 #endif
-		}
+	}
 
-		Task taskToPerform = _taskQueue.front();
-		_taskQueue.pop();
+	Task task = _taskQueue.front();
+	_taskQueue.pop();
 
 #if defined(_DEBUG) && defined(DEBUG_SYNCHRONIZATION)
 		LogCriticalSectionLeaving(__LINE__);
 #endif
-		LeaveCriticalSection(&_criticalSection);
+	LeaveCriticalSection(&_criticalSection);
 
-		taskToPerform.Perform();
+	return task;
+}
+
+void ThreadPool::ThreadStart()
+{
+	while (true)
+	{
+		Task task = TryTakeTask();
+		task.Perform();
 	}
 }
 
