@@ -9,6 +9,11 @@ Task::Task(void (*function)(void *), void *parameter)
 {
 }
 
+Task::~Task()
+{
+	CloseHandle(_completionEvent);
+}
+
 void Task::Perform() const
 {
 	_function(_parameter);

@@ -11,6 +11,7 @@ class Task
 
 public:
 	explicit Task(void (*function)(void *), void *parameter = nullptr);
+	~Task();
 
 	void Perform() const;
 	void WaitForCompletion() const;

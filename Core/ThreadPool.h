@@ -1,5 +1,6 @@
 ﻿#pragma once
 
+#include <memory>
 #include <queue>
 #include <vector>
 
@@ -9,7 +10,7 @@
 class ThreadPool
 {
 	std::vector<Thread> _threads;
-	std::queue<Task> _taskQueue;
+	std::queue<std::shared_ptr<Task>> _taskQueue;
 
 	mutable CONDITION_VARIABLE _threadConditionLock;
 	mutable CRITICAL_SECTION _criticalSection;
@@ -18,7 +19,7 @@ public:
 	explicit ThreadPool(unsigned short concurrency);
 	~ThreadPool();
 
-	void Submit(const Task &task);
+	void Submit(const std::shared_ptr<Task>& task);
 
 	unsigned short GetConcurrency() const;
 
@@ -26,7 +27,7 @@ private:
 	void ThreadStart();
 	static void StaticThreadStart(void *parameter);
 
-	Task TryTakeTask();
+	std::shared_ptr<Task> TryTakeTask();
 
 	void LogCriticalSectionEntering(unsigned int line) const;
 	void LogCriticalSectionLeaving(unsigned int line) const;

@@ -30,7 +30,7 @@ ThreadPool::~ThreadPool()
 	DeleteCriticalSection(&_criticalSection);
 }
 
-void ThreadPool::Submit(const Task &task)
+void ThreadPool::Submit(const std::shared_ptr<Task> &task)
 {
 	EnterCriticalSection(&_criticalSection);
 #if defined(_DEBUG) && defined(DEBUG_SYNCHRONIZATION)
@@ -57,7 +57,7 @@ void ThreadPool::StaticThreadStart(void *parameter)
 	threadPool->ThreadStart();
 }
 
-Task ThreadPool::TryTakeTask()
+std::shared_ptr<Task> ThreadPool::TryTakeTask()
 {
 	EnterCriticalSection(&_criticalSection);
 #if defined(_DEBUG) && defined(DEBUG_SYNCHRONIZATION)
@@ -75,7 +75,7 @@ Task ThreadPool::TryTakeTask()
 #endif
 	}
 
-	Task task = _taskQueue.front();
+	std::shared_ptr<Task> task = _taskQueue.front();
 	_taskQueue.pop();
 
 #if defined(_DEBUG) && defined(DEBUG_SYNCHRONIZATION)
@@ -90,8 +90,8 @@ void ThreadPool::ThreadStart()
 {
 	while (true)
 	{
-		Task task = TryTakeTask();
-		task.Perform();
+		std::shared_ptr<Task> taskPtr = TryTakeTask();
+		taskPtr->Perform();
 	}
 }
 

@@ -58,26 +58,26 @@ void Util::FileUtils::Sort(const std::string &inputPath, const std::string *outp
 
 	if (threadPool)
 	{
-		std::vector<Task> sortTasks;
+		std::vector<std::shared_ptr<Task>> sortTasks;
 		unsigned short concurrency = threadPool->GetConcurrency();
 		std::vector<long long> threadLoads = DistributeLoadBetweenThreads(static_cast<long long>(lines.size()),
 		                                                                  concurrency);
 		std::vector<Range<std::string>> sortRanges = PrepareSortRanges(lines, threadLoads);
 		for (Range<std::string> &sortRange : sortRanges)
 		{
-			Task sortTask(reinterpret_cast<void (*)(void *)>(SortRange), &sortRange);
-			sortTasks.push_back(sortTask);
+			auto taskPtr = std::make_shared<Task>(reinterpret_cast<void (*)(void *)>(SortRange), &sortRange);
+			sortTasks.push_back(taskPtr);
 		}
 
 		auto beforeSubmission = std::chrono::steady_clock::now();
-		for (const Task &sortTask : sortTasks)
+		for (const std::shared_ptr<Task> &sortTaskPtr : sortTasks)
 		{
-			threadPool->Submit(sortTask);
+			threadPool->Submit(sortTaskPtr);
 		}
 
-		for (const Task &sortTask : sortTasks)
+		for (const std::shared_ptr<Task> &sortTaskPtr : sortTasks)
 		{
-			sortTask.WaitForCompletion();
+			sortTaskPtr->WaitForCompletion();
 		}
 		auto afterCompletion = std::chrono::steady_clock::now();
 
