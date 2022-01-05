@@ -85,7 +85,9 @@ namespace Test
 		};
 		for (const std::string &filePath : filePaths)
 		{
-			for (unsigned short concurrency = 1; concurrency <= Util::FileUtils::MaxConcurrency; concurrency++)
+			for (unsigned short concurrency = Util::FileUtils::NoConcurrency;
+			     concurrency <= Util::FileUtils::MaxConcurrency;
+			     concurrency++)
 			{
 				dataSource.emplace_back(filePath, concurrency);
 			}
