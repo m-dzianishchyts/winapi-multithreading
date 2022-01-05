@@ -15,12 +15,12 @@ public:
 	{
 	}
 
-	const typename std::vector<TType>::iterator & GetBegin() const
+	const typename std::vector<TType>::iterator &GetBegin() const
 	{
 		return _begin;
 	}
 
-	const typename std::vector<TType>::iterator & GetEnd() const
+	const typename std::vector<TType>::iterator &GetEnd() const
 	{
 		return _end;
 	}

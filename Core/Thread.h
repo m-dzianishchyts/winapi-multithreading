@@ -8,7 +8,7 @@ class Thread
 	DWORD _threadId;
 
 public:
-	Thread(void (*startRoutine)(void *), void* parameter);
+	Thread(void (*startRoutine)(void *), void *parameter);
 	~Thread();
 
 	void Start() const;

@@ -16,7 +16,7 @@ namespace Logger
 		~Logger();
 
 		template <typename T>
-		void Log(T& message)
+		void Log(T &message)
 		{
 			EnterCriticalSection(&_criticalSection);
 			std::clog << message.str() << std::endl;
@@ -32,17 +32,17 @@ namespace Logger
 		std::stringstream StringStream;
 
 		LoggerBuffer() = default;
-		LoggerBuffer(const LoggerBuffer&) = delete;
+		LoggerBuffer(const LoggerBuffer &) = delete;
 
-		LoggerBuffer& operator=(const LoggerBuffer&) = delete;
-		LoggerBuffer& operator=(LoggerBuffer&&) = delete;
+		LoggerBuffer &operator=(const LoggerBuffer &) = delete;
+		LoggerBuffer &operator=(LoggerBuffer &&) = delete;
 
-		LoggerBuffer(LoggerBuffer&& loggerBuffer) noexcept : StringStream(move(loggerBuffer.StringStream))
+		LoggerBuffer(LoggerBuffer &&loggerBuffer) noexcept : StringStream(move(loggerBuffer.StringStream))
 		{
 		}
 
 		template <typename T>
-		LoggerBuffer& operator<<(T&& message)
+		LoggerBuffer &operator<<(T &&message)
 		{
 			StringStream << std::forward<T>(message);
 			return *this;
@@ -55,11 +55,10 @@ namespace Logger
 	};
 
 	template <typename T>
-	LoggerBuffer operator<<(Logger& logger, T&& message)
+	LoggerBuffer operator<<(Logger &logger, T &&message)
 	{
 		LoggerBuffer buf;
 		buf.StringStream << std::forward<T>(message);
 		return buf;
 	}
-
 }
