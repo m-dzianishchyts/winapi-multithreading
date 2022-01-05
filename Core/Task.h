@@ -15,4 +15,6 @@ public:
 
 	void Perform() const;
 	void WaitForCompletion() const;
+
+	friend class ThreadPool;
 };

@@ -27,6 +27,17 @@ ThreadPool::ThreadPool(unsigned short concurrency) :
 
 ThreadPool::~ThreadPool()
 {
+	std::vector<std::shared_ptr<Task>> stopTasks;
+	for (unsigned short i = 0; i < static_cast<unsigned short>(_threads.size()); i++)
+	{
+		auto stopTask = std::make_shared<Task>(nullptr, nullptr);
+		stopTasks.push_back(stopTask);
+		Submit(stopTask);
+	}
+	for (const Thread &thread : _threads)
+	{
+		thread.Join();
+	}
 	DeleteCriticalSection(&_criticalSection);
 }
 
@@ -91,6 +102,11 @@ void ThreadPool::ThreadStart()
 	while (true)
 	{
 		std::shared_ptr<Task> taskPtr = TryTakeTask();
+		if (taskPtr->_function == nullptr)
+		{
+			break;
+		}
+
 		taskPtr->Perform();
 	}
 }

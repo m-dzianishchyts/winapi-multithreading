@@ -9,9 +9,9 @@ class Thread
 
 public:
 	Thread(void (*startRoutine)(void *), void *parameter);
-	~Thread();
 
 	void Start() const;
+	void Join() const;
 
 	DWORD GetThreadId() const;
 };
