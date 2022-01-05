@@ -11,7 +11,7 @@ namespace Util
 	class FileUtils final
 	{
 	public:
-		inline static unsigned short MaxConcurrency = std::thread::hardware_concurrency();
+		inline static unsigned short MaxConcurrency = ThreadPool::MaxConcurrency;
 		inline static unsigned short NoConcurrency = 1;
 
 		FileUtils() = delete;

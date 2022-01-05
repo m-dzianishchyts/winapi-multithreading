@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <queue>
+#include <thread>
 #include <vector>
 
 #include "Task.h"
@@ -9,6 +10,10 @@
 
 class ThreadPool
 {
+public:
+	inline static unsigned short MaxConcurrency = std::thread::hardware_concurrency();
+
+private:
 	std::vector<Thread> _threads;
 	std::queue<std::shared_ptr<Task>> _taskQueue;
 
@@ -19,7 +24,7 @@ public:
 	explicit ThreadPool(unsigned short concurrency);
 	~ThreadPool();
 
-	void Submit(const std::shared_ptr<Task>& task);
+	void Submit(const std::shared_ptr<Task> &task);
 
 	unsigned short GetConcurrency() const;
 
