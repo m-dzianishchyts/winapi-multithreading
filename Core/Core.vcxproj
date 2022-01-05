@@ -144,6 +144,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="FileUtils.cpp" />
+    <ClCompile Include="Logger.cpp" />
     <ClCompile Include="Range.cpp" />
     <ClCompile Include="Task.cpp" />
     <ClCompile Include="Thread.cpp" />
@@ -151,6 +152,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FileUtils.h" />
+    <ClInclude Include="Logger.h" />
     <ClInclude Include="Range.h" />
     <ClInclude Include="Task.h" />
     <ClInclude Include="Thread.h" />

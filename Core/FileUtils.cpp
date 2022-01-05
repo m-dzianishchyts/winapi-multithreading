@@ -5,20 +5,14 @@
 #include <filesystem>
 #include <fstream>
 
+#include "Logger.h"
 #include "Range.h"
-
-#ifdef _DEBUG
-#include <iostream>
-#define Debug(info) std::cout << info
-#else
-#define Debug(x)
-#endif
 
 std::vector<std::string> ReadAllLines(const std::string &filePath);
 std::vector<long long> DistributeLoadBetweenThreads(long long totalLoad, unsigned int concurrency);
 std::vector<Range<std::string>> PrepareSortRanges(std::vector<std::string> &lines,
                                                   const std::vector<long long> &threadLoads);
-void ThreadProc(void* parameter);
+void SortRange(const Range<std::string> *sortRange);
 void WriteAllLines(const std::string &filePath, const std::vector<std::string> &lines);
 
 void Util::FileUtils::Sort(const std::string &inputPath, const std::string &outputPath)
@@ -58,7 +52,9 @@ void Util::FileUtils::Sort(const std::string &inputPath, const std::string *outp
                            std::vector<std::string> *outputSortedLines)
 {
 	std::vector<std::string> lines = ReadAllLines(inputPath);
-	Debug("Lines in file \"" << inputPath << "\": " << lines.size() << std::endl);
+#ifdef _DEBUG
+	Logger::Global << "Lines in file \"" << inputPath << "\": " << lines.size();
+#endif
 
 	if (threadPool)
 	{
@@ -69,7 +65,7 @@ void Util::FileUtils::Sort(const std::string &inputPath, const std::string *outp
 		std::vector<Range<std::string>> sortRanges = PrepareSortRanges(lines, threadLoads);
 		for (Range<std::string> &sortRange : sortRanges)
 		{
-			Task sortTask(ThreadProc, &sortRange);
+			Task sortTask(reinterpret_cast<void (*)(void *)>(SortRange), &sortRange);
 			sortTasks.push_back(sortTask);
 		}
 
@@ -91,8 +87,10 @@ void Util::FileUtils::Sort(const std::string &inputPath, const std::string *outp
 		}
 		auto afterMerge = std::chrono::steady_clock::now();
 
-		Debug("Time for parallel sorting: " << (afterCompletion - beforeSubmission).count() << std::endl);
-		Debug("Time for merging: " << (afterMerge - afterCompletion).count() << std::endl);
+#ifdef _DEBUG
+		Logger::Global << "Time for parallel sorting: " << (afterCompletion - beforeSubmission).count();
+		Logger::Global << "Time for merging: " << (afterMerge - afterCompletion).count();
+#endif
 	} else
 	{
 		std::sort(lines.begin(), lines.end());
@@ -157,9 +155,8 @@ std::vector<Range<std::string>> PrepareSortRanges(std::vector<std::string> &line
 	return sortRanges;
 }
 
-void ThreadProc(void *parameter)
+void SortRange(const Range<std::string> *sortRange)
 {
-	auto sortRange = static_cast<Range<std::string>*>(parameter);
 	std::sort(sortRange->GetBegin(), sortRange->GetEnd());
 }
 

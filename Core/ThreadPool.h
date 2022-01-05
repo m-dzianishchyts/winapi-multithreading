@@ -1,13 +1,10 @@
 ﻿#pragma once
 
 #include <queue>
-#include <sstream>
 #include <vector>
 
 #include "Task.h"
 #include "Thread.h"
-
-static std::stringstream stringStream;
 
 class ThreadPool
 {
@@ -19,16 +16,17 @@ class ThreadPool
 
 public:
 	explicit ThreadPool(unsigned short concurrency);
+	~ThreadPool();
 
 	void Submit(const Task &task);
 
 	unsigned short GetConcurrency() const;
 
 private:
+	void ThreadStart();
 	static void StaticThreadStart(void *parameter);
-	static void LogThreadCreation(const Thread &thread);
 
 	void LogCriticalSectionEntering(unsigned int line) const;
 	void LogCriticalSectionLeaving(unsigned int line) const;
-	void ThreadStart();
+	static void LogThreadCreation(const Thread &thread);
 };
